@@ -1,0 +1,28 @@
+{
+  "name": "assinatura-digital-plataforma",
+  "version": "1.0.0",
+  "description": "Plataforma de Assinatura Digital - Uma aplicação web para gerenciar assinaturas digitais de documentos",
+  "main": "index.html",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "serve-node": "npx serve .",
+    "start": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "assinatura-digital",
+    "digital-signature",
+    "vue",
+    "documents",
+    "pdf"
+  ],
+  "author": "Lucas Suzart",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LucasSuzart/assinatura-digital-plataforma.git"
+  },
+  "homepage": "https://lucassuzart.github.io/assinatura-digital-plataforma"
+}

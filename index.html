@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plataforma de Assinatura Digital</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>Plataforma de Assinatura Digital</h1>
+            
+            <!-- Step 1: Upload do Documento -->
+            <div id="step1" class="step">
+                <h2>1. Upload do Documento</h2>
+                <input type="file" id="fileInput" />
+                <button id="nextStep1" disabled onclick="goToStep(2)">Próximo</button>
+            </div>
+
+            <!-- Step 2: Envolvidos -->
+            <div id="step2" class="step" style="display: none;">
+                <h2>2. Envolvidos</h2>
+                <label>
+                    Email do Signatário 1:
+                    <input type="email" id="signer1" placeholder="email1@exemplo.com" />
+                </label>
+                <label>
+                    Email do Signatário 2:
+                    <input type="email" id="signer2" placeholder="email2@exemplo.com" />
+                </label>
+                <button id="nextStep2" disabled onclick="goToStep(3)">Próximo</button>
+                <button onclick="goToStep(1)">Voltar</button>
+            </div>
+
+            <!-- Step 3: Envio Seguro -->
+            <div id="step3" class="step" style="display: none;">
+                <h2>3. Envio Seguro do Documento</h2>
+                <p>Documento enviado por e-mail apenas para os envolvidos.</p>
+                <button onclick="goToStep(4)">Simular Acesso Seguro</button>
+                <button onclick="goToStep(2)">Voltar</button>
+            </div>
+
+            <!-- Step 4: Assinatura Digital -->
+            <div id="step4" class="step" style="display: none;">
+                <h2>4. Assinatura Digital</h2>
+                <div id="signaturesContainer">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <button id="finishButton" disabled onclick="goToStep(5)">Finalizar</button>
+                <button onclick="goToStep(3)">Voltar</button>
+            </div>
+
+            <!-- Step 5: Documento Finalizado -->
+            <div id="step5" class="step" style="display: none;">
+                <h2>5. Documento Finalizado</h2>
+                <p>O documento foi assinado por todos os envolvidos.</p>
+                <button onclick="downloadSimulatedPDF()">Baixar PDF Final</button>
+                <div id="downloadLink" style="display: none;">
+                    <a id="pdfLink" download="documento-final.pdf">Clique aqui para baixar</a>
+                </div>
+                <button onclick="reset()">Nova Assinatura</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        let currentStep = 1;
+        let documentFile = null;
+        let signers = ['', ''];
+        let signatures = [false, false];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // File input change
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                documentFile = e.target.files[0];
+                updateStep1Button();
+            });
+
+            // Signer inputs change
+            document.getElementById('signer1').addEventListener('input', function(e) {
+                signers[0] = e.target.value;
+                updateStep2Button();
+            });
+
+            document.getElementById('signer2').addEventListener('input', function(e) {
+                signers[1] = e.target.value;
+                updateStep2Button();
+            });
+        }
+
+        function updateStep1Button() {
+            const button = document.getElementById('nextStep1');
+            button.disabled = !documentFile;
+        }
+
+        function updateStep2Button() {
+            const button = document.getElementById('nextStep2');
+            button.disabled = !signers[0] || !signers[1];
+        }
+
+        function goToStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(el => {
+                el.style.display = 'none';
+            });
+
+            // Show current step
+            document.getElementById('step' + step).style.display = 'block';
+            currentStep = step;
+
+            // Update step 4 content if needed
+            if (step === 4) {
+                updateSignaturesContainer();
+            }
+        }
+
+        function updateSignaturesContainer() {
+            const container = document.getElementById('signaturesContainer');
+            container.innerHTML = '';
+
+            signers.forEach((signer, idx) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <p>
+                        <strong>${signer}</strong>
+                        <span id="status${idx}">${signatures[idx] ? 'Assinou ✔️' : 'Não Assinou ❌'}</span>
+                    </p>
+                    <button id="signBtn${idx}" onclick="sign(${idx})" ${signatures[idx] ? 'style="display:none"' : ''}>
+                        Assinar como ${signer}
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+
+            updateFinishButton();
+        }
+
+        function sign(idx) {
+            signatures[idx] = true;
+            document.getElementById('status' + idx).textContent = 'Assinou ✔️';
+            document.getElementById('signBtn' + idx).style.display = 'none';
+            updateFinishButton();
+        }
+
+        function updateFinishButton() {
+            const button = document.getElementById('finishButton');
+            button.disabled = signatures.includes(false);
+        }
+
+        function downloadSimulatedPDF() {
+            // Simulação: Gera um "PDF" fake como arquivo de texto 
+            const data = `
+Documento: ${documentFile?.name || 'Sem nome'}
+Assinado por: ${signers.join(', ')}
+Data: ${new Date().toLocaleString()}
+(Simulação de PDF final, use backend para gerar de verdade!)
+            `;
+            const blob = new Blob([data], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.getElementById('pdfLink');
+            link.href = url;
+            document.getElementById('downloadLink').style.display = 'block';
+        }
+
+        function reset() {
+            currentStep = 1;
+            documentFile = null;
+            signers = ['', ''];
+            signatures = [false, false];
+            
+            // Reset form inputs
+            document.getElementById('fileInput').value = '';
+            document.getElementById('signer1').value = '';
+            document.getElementById('signer2').value = '';
+            document.getElementById('downloadLink').style.display = 'none';
+            
+            // Go back to step 1
+            goToStep(1);
+        }
+    </script>
+
+    <style>
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: #f5f6fa;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 0 16px #aaa4;
+        }
+        input[type="file"] {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 1rem;
+        }
+        button {
+            margin: 0.5rem 0.5rem 0.5rem 0;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</body>
+</html>
